@@ -84,7 +84,7 @@ class StickyMember(commands.Cog):
     @commands.command()
     async def liststickymem(self, ctx):
         
-        data = self.config.all_members(ctx.guild)
+        data = await self.config.all_members(ctx.guild)
         if not data:
             await ctx.send(_("No stickied members found."))
             return
