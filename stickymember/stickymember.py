@@ -27,7 +27,7 @@ class StickyMember(commands.Cog):
 
     def __init__(self):
         self.config = Config.get_conf(self, 231215102020, force_registration=True)
-        default = {"roles": [], "active": False}
+        default = {"roles": [], "active": False, "name": ""}
         self.config.register_member(**default)
         self.logger = getLogger("red.cog.dav-cogs.stickymember")
 
@@ -37,6 +37,12 @@ class StickyMember(commands.Cog):
             role_ids = [r.id for r in after.roles]
             role_ids.remove(after.guild.id)
             await self.config.member(after).roles.set(role_ids)
+
+            if before.nick != after.nick:
+                if after.nick is None:
+                    await self.config.member(after).name.clear()
+                else:
+                    await self.config.member(after).name.set(after.nick)        
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -48,6 +54,13 @@ class StickyMember(commands.Cog):
             except Forbidden:
                 self.logger.warn("Couldn't assign roles to {member.id} on rejoin. 403")
 
+            try:
+                name = await self.config.member(member).name()
+                if name != "":
+                    await member.edit(nick=name)
+            except Forbidden:
+                self.logger.warn("Couldn't change nickname for {member.id} on rejoin. 403")
+
     @commands.admin()
     @commands.command()
     async def stickymem(self, ctx, member: Member) -> None:
@@ -55,6 +68,8 @@ class StickyMember(commands.Cog):
         role_ids = [r.id for r in member.roles]
         role_ids.remove(member.guild.id)
         await self.config.member(member).roles.set(role_ids)
+        if member.nick is not None:
+            await self.config.member(member).name.set(member.nick)
         await ctx.send(_("Stickied {member}.").format(member=member.display_name))
 
     @commands.admin()
