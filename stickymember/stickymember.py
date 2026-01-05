@@ -79,3 +79,20 @@ class StickyMember(commands.Cog):
             member = member.id
         await self.config.member_from_ids(ctx.guild.id, member).active.set(False)
         await ctx.send(_("{member_id} unstickied.").format(member_id=member))
+
+    @commands.admin()
+    @commands.command()
+    async def liststickymem(self, ctx):
+        
+        data = self.config.all_members(ctx.guild)
+        if not data:
+            await ctx.send(_("No stickied members found."))
+            return
+        msg = _("Stickied members:\n")
+        for member_id in data:
+            member = ctx.guild.get_member(member_id)
+            if member:
+                msg += f"- {member.display_name} ({member.id})\n"
+            else:
+                msg += f"- Unknown Member ({member_id})\n"
+        await ctx.send(msg)
